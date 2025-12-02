@@ -12,7 +12,7 @@ const couponSchema = new mongoose.Schema(
 
     validFrom: Date,
     validTo: Date,
-
+    usedCount:{type:Number,default:0},
     active: { type: Boolean, default: true },
   },
   { timestamps: true }
