@@ -1,6 +1,14 @@
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
+  storeId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Store"
+  },
+  SellerId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Store"
+  },
 title:{
   type:String,
   required:true,
