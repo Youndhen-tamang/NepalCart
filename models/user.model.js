@@ -4,12 +4,24 @@ import bcrypt from "bcryptjs";
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    username: { type: String, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phone: String,
-    role: { type: String, enum: ["admin", "customer", "seller"], default: "customer" },
-    addresses: [{ fullName: String, phone: String, city: String, state: String, zip: String, country: { type: String, default: "Nepal" } }],
+    role: {
+      type: String,
+      enum: ["admin", "customer", "seller"],
+      default: "customer",
+    },
+    addresses: [
+      {
+        fullName: String,
+        phone: String,
+        city: String,
+        state: String,
+        zip: String,
+        country: { type: String, default: "Nepal" },
+      },
+    ],
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     cartId: { type: mongoose.Schema.Types.ObjectId, ref: "Cart" },
     googleId: String,

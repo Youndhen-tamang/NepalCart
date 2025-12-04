@@ -54,6 +54,8 @@ export async function POST(request) {
     const userObj = user.toObject();
     delete userObj.password;
 
+    console.log(userObj);
+    console.log(accessToken)
     return NextResponse.json({ success: true, user: userObj }, { status: 200 });
   } catch (error) {
     console.error("Login error:", error);
