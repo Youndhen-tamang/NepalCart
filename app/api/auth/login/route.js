@@ -32,7 +32,6 @@ export async function POST(request) {
       );
     }
 
-    // Optional: check if user is verified
     if (!user.isVerified) {
       return NextResponse.json(
         { success: false, message: "Please verify your email first" },
@@ -49,12 +48,19 @@ export async function POST(request) {
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken({ id: user._id.toString() });
 
-    setTokenCookies({ accessToken, refreshToken });
-
     const userObj = user.toObject();
     delete userObj.password;
 
-    return NextResponse.json({ success: true, user: userObj }, { status: 200 });
+    // IMPORTANT: Create response first
+    const res = NextResponse.json({
+      success: true,
+      user: userObj,
+    });
+
+    // Set cookies ON response
+    setTokenCookies(res, { accessToken, refreshToken });
+
+    return res;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

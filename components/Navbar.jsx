@@ -1,4 +1,5 @@
 'use client'
+import { sendLogout } from "@/fetch/sendLogout";
 import { Search, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +16,7 @@ const Navbar = () => {
     const handleSearch = (e) => {
         e.preventDefault()
         router.push(`/shop?search=${search}`)
+
     }
 
     return (
@@ -47,8 +49,12 @@ const Navbar = () => {
                             <button className="absolute -top-1 left-3 text-[8px] text-white bg-slate-600 size-3.5 rounded-full">{cartCount}</button>
                         </Link>
 
-                        <button className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full">
+                        <button className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full" onClick={()=>router.push("/login")}>
                             Login
+                        </button>
+
+                        <button className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full" onClick={()=>sendLogout()}>
+                            Logout
                         </button>
 
                     </div>
