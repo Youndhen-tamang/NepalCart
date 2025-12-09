@@ -30,7 +30,18 @@ export function middleware(request) {
         return NextResponse.redirect(new URL("/customer", request.url));
       }
       if (pathname.startsWith("/store") && payload.role !== "seller") {
-        return NextResponse.redirect(new URL("/customer", request.url));
+       try {
+        if(payload.role !== 'seller') return NextResponse.redirect(new URL("/customer", request.url));
+
+        const isCreatingStore = pathname.startsWith("/store/create")
+        if(!payload.storeId && !isCreatingStore){
+          return NextResponse.redirect(new ("/store/create",request.url))
+        }
+        
+       } catch (error) {
+        console.log("Error in Middleware", error);
+        return NextResponse.redirect(new URL("/login", request.url));
+       }
       }
 
       if (pathname.startsWith("/customer") && payload.role !== "customer") {

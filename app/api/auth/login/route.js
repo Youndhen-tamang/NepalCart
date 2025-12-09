@@ -45,6 +45,10 @@ export async function POST(request) {
       email: user.email,
     };
 
+    if(user.role === 'seller' && user.stoerId){
+      payload.stoerId = user.stoerId.toString();
+    }
+
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken({ id: user._id.toString() });
 
