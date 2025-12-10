@@ -1,93 +1,107 @@
-'use client'
-import { assets } from "@/assets/assets"
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import toast from "react-hot-toast"
-import Loading from "@/components/Loading"
+import { redirect } from "next/navigation";
+import { getAuthUser } from "@/lib/auth";
+import { connectDB } from "@/lib/connectDB";
+import Store from "@/models/store.model";
+import User from "@/models/user.model";
+import CreateStoreForm from "@/components/store/CreateStoreForm";
+import Loading from "@/components/Loading";
 
-export default function CreateStore() {
+async function getStoreStatus() {
+  try {
+    await connectDB();
+    const user = await getAuthUser();
 
-    const [alreadySubmitted, setAlreadySubmitted] = useState(false)
-    const [status, setStatus] = useState("")
-    const [loading, setLoading] = useState(true)
-    const [message, setMessage] = useState("")
-
-    const [storeInfo, setStoreInfo] = useState({
-        name: "",
-        username: "",
-        description: "",
-        email: "",
-        contact: "",
-        address: "",
-        image: ""
-    })
-
-    const onChangeHandler = (e) => {
-        setStoreInfo({ ...storeInfo, [e.target.name]: e.target.value })
+    if (!user) {
+      console.log("No authenticated user found");
+      return { hasStore: false, store: null, status: null };
     }
 
-    const fetchSellerStatus = async () => {
-        // Logic to check if the store is already submitted
+    console.log("Checking store status for user:", user._id);
 
+    const userDoc = await User.findById(user._id);
 
-        setLoading(false)
+    if (!userDoc) {
+      console.log("User document not found");
+      return { hasStore: false, store: null, status: null };
     }
 
-    const onSubmitHandler = async (e) => {
-        e.preventDefault()
-        // Logic to submit the store details
-
-
+    if (!userDoc.storeId) {
+      console.log("User has no storeId");
+      return { hasStore: false, store: null, status: null };
     }
 
-    useEffect(() => {
-        fetchSellerStatus()
-    }, [])
+    console.log("User has storeId:", userDoc.storeId);
 
-    return !loading ? (
-        <>
-            {!alreadySubmitted ? (
-                <div className="mx-6 min-h-[70vh] my-16">
-                    <form onSubmit={e => toast.promise(onSubmitHandler(e), { loading: "Submitting data..." })} className="max-w-7xl mx-auto flex flex-col items-start gap-3 text-slate-500">
-                        {/* Title */}
-                        <div>
-                            <h1 className="text-3xl ">Add Your <span className="text-slate-800 font-medium">Store</span></h1>
-                            <p className="max-w-lg">To become a seller on GoCart, submit your store details for review. Your store will be activated after admin verification.</p>
-                        </div>
+    const store = await Store.findById(userDoc.storeId);
 
-                        <label className="mt-10 cursor-pointer">
-                            Store Logo
-                            <Image src={storeInfo.image ? URL.createObjectURL(storeInfo.image) : assets.upload_area} className="rounded-lg mt-2 h-16 w-auto" alt="" width={150} height={100} />
-                            <input type="file" accept="image/*" onChange={(e) => setStoreInfo({ ...storeInfo, image: e.target.files[0] })} hidden />
-                        </label>
+    if (!store) {
+      console.log("Store not found for storeId:", userDoc.storeId);
+      return { hasStore: false, store: null, status: null };
+    }
 
-                        <p>Username</p>
-                        <input name="username" onChange={onChangeHandler} value={storeInfo.username} type="text" placeholder="Enter your store username" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+    console.log("Store found:", store._id, "Status:", store.status);
 
-                        <p>Name</p>
-                        <input name="name" onChange={onChangeHandler} value={storeInfo.name} type="text" placeholder="Enter your store name" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+    return {
+      hasStore: true,
+      store: {
+        id: store._id,
+        name: store.name,
+        username: store.username,
+        description: store.description,
+        email: store.email,
+        phone: store.phone,
+        address: store.address,
+        bannerImage: store.bannerImage,
+        status: store.status,
+        createdAt: store.createdAt,
+      },
+      status: store.status || null,
+    };
+  } catch (error) {
+    console.error("Error fetching store status:", error);
+    console.error("Error stack:", error.stack);
+    return { hasStore: false, store: null, status: null };
+  }
+}
 
-                        <p>Description</p>
-                        <textarea name="description" onChange={onChangeHandler} value={storeInfo.description} rows={5} placeholder="Enter your store description" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded resize-none" />
+export default async function CreateStorePage() {
+  const storeStatus = await getStoreStatus();
 
-                        <p>Email</p>
-                        <input name="email" onChange={onChangeHandler} value={storeInfo.email} type="email" placeholder="Enter your store email" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+  // If store is approved, redirect to store dashboard
+  if (storeStatus.hasStore && storeStatus.status === "approved") {
+    redirect("/store");
+  }
 
-                        <p>Contact Number</p>
-                        <input name="contact" onChange={onChangeHandler} value={storeInfo.contact} type="text" placeholder="Enter your store contact number" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded" />
+  // If store exists but is pending/rejected, show status message
+  if (storeStatus.hasStore) {
+    const statusMessages = {
+      pending:
+        "Your store application is pending approval. We'll notify you once it's reviewed.",
+      rejected:
+        "Your store application was rejected. Please contact support for more information.",
+      approved: "Your store has been approved!",
+    };
 
-                        <p>Address</p>
-                        <textarea name="address" onChange={onChangeHandler} value={storeInfo.address} rows={5} placeholder="Enter your store address" className="border border-slate-300 outline-slate-400 w-full max-w-lg p-2 rounded resize-none" />
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center px-6">
+        <div className="max-w-2xl text-center">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-slate-700 mb-4">
+            Store Application Status
+          </h2>
+          <p className="text-lg text-slate-500 mb-6">
+            {statusMessages[storeStatus.status] || "Unknown status"}
+          </p>
+          {storeStatus.status === "pending" && (
+            <p className="text-sm text-slate-400">
+              Redirecting to dashboard in{" "}
+              <span className="font-semibold">5 seconds</span>
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-                        <button className="bg-slate-800 text-white px-12 py-2 rounded mt-10 mb-40 active:scale-95 hover:bg-slate-900 transition ">Submit</button>
-                    </form>
-                </div>
-            ) : (
-                <div className="min-h-[80vh] flex flex-col items-center justify-center">
-                    <p className="sm:text-2xl lg:text-3xl mx-5 font-semibold text-slate-500 text-center max-w-2xl">{message}</p>
-                    {status === "approved" && <p className="mt-5 text-slate-400">redirecting to dashboard in <span className="font-semibold">5 seconds</span></p>}
-                </div>
-            )}
-        </>
-    ) : (<Loading />)
+  // Show the form if no store exists
+  return <CreateStoreForm initialStatus={storeStatus} />;
 }

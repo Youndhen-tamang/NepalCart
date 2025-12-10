@@ -4,7 +4,7 @@ const storeSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
   name: String,
-  username: { type: String, unique: true }, // @greatstack
+  username: { type: String, unique: true }, 
   description: String,
 
   email: String,
