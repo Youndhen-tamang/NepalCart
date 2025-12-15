@@ -1,10 +1,11 @@
+// app/create-store/page.jsx  (or wherever your CreateStorePage lives)
+
 import { redirect } from "next/navigation";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, requireRole } from "@/lib/auth";
 import { connectDB } from "@/lib/connectDB";
 import Store from "@/models/store.model";
 import User from "@/models/user.model";
 import CreateStoreForm from "@/components/store/CreateStoreForm";
-import Loading from "@/components/Loading";
 
 async function getStoreStatus() {
   try {
@@ -12,36 +13,29 @@ async function getStoreStatus() {
     const user = await getAuthUser();
 
     if (!user) {
-      console.log("No authenticated user found");
-      return { hasStore: false, store: null, status: null };
+      return { user: null, hasStore: false, store: null, status: null };
     }
 
-    console.log("Checking store status for user:", user._id);
-
-    const userDoc = await User.findById(user._id);
-
-    if (!userDoc) {
-      console.log("User document not found");
-      return { hasStore: false, store: null, status: null };
+    // requireRole will check user's role from payload
+    if (!requireRole(user, ["seller"])) {
+      // authenticated but not a seller
+      return { user, hasStore: false, store: null, status: null, notSeller: true };
     }
 
-    if (!userDoc.storeId) {
-      console.log("User has no storeId");
-      return { hasStore: false, store: null, status: null };
-    }
+    const userId = user._id || user.id;
+    const userDoc = await User.findById(userId);
 
-    console.log("User has storeId:", userDoc.storeId);
+    if (!userDoc || !userDoc.storeId) {
+      return { user, hasStore: false, store: null, status: null };
+    }
 
     const store = await Store.findById(userDoc.storeId);
-
     if (!store) {
-      console.log("Store not found for storeId:", userDoc.storeId);
-      return { hasStore: false, store: null, status: null };
+      return { user, hasStore: false, store: null, status: null };
     }
 
-    console.log("Store found:", store._id, "Status:", store.status);
-
     return {
+      user,
       hasStore: true,
       store: {
         id: store._id,
@@ -59,21 +53,31 @@ async function getStoreStatus() {
     };
   } catch (error) {
     console.error("Error fetching store status:", error);
-    console.error("Error stack:", error.stack);
-    return { hasStore: false, store: null, status: null };
+    return { user: null, hasStore: false, store: null, status: null };
   }
 }
 
 export default async function CreateStorePage() {
   const storeStatus = await getStoreStatus();
 
-  // If store is approved, redirect to store dashboard
-  if (storeStatus.hasStore && storeStatus.status === "approved") {
-    redirect("/store");
+  // Not authenticated -> redirect to login
+  if (!storeStatus.user) {
+    redirect("/login");
   }
 
-  // If store exists but is pending/rejected, show status message
+  // Authenticated but not a seller -> redirect to customer area
+  if (storeStatus.notSeller) {
+    redirect("/customer");
+  }
+
+  // Seller who already has a store -> redirect to dashboard
   if (storeStatus.hasStore) {
+    // If store is approved, send to store dashboard
+    if (storeStatus.status === "approved") {
+      redirect("/store");
+    }
+
+    // If store exists but pending/rejected — show status message (server render)
     const statusMessages = {
       pending:
         "Your store application is pending approval. We'll notify you once it's reviewed.",
@@ -91,17 +95,11 @@ export default async function CreateStorePage() {
           <p className="text-lg text-slate-500 mb-6">
             {statusMessages[storeStatus.status] || "Unknown status"}
           </p>
-          {storeStatus.status === "pending" && (
-            <p className="text-sm text-slate-400">
-              Redirecting to dashboard in{" "}
-              <span className="font-semibold">5 seconds</span>
-            </p>
-          )}
         </div>
       </div>
     );
   }
 
-  // Show the form if no store exists
+  // Seller without a store -> show the client form
   return <CreateStoreForm initialStatus={storeStatus} />;
 }

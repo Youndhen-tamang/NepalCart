@@ -101,7 +101,6 @@ export default function CreateStoreForm({ initialStatus = null }) {
         router.refresh();
         router.push("/create-store");
       }, 1200);
-
     } catch (error) {
       toast.dismiss(toastId);
       toast.error(error.message || "Failed to create store");
@@ -122,8 +121,8 @@ export default function CreateStoreForm({ initialStatus = null }) {
             Add Your <span className="text-slate-800 font-medium">Store</span>
           </h1>
           <p className="max-w-lg">
-            To become a seller on GoCart, submit your store details for review.
-            Your store will be activated after admin verification.
+            To become a seller on NepalCart, submit your store details for
+            review. Your store will be activated after admin verification.
           </p>
         </div>
 

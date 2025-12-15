@@ -9,7 +9,7 @@ export async function POST(request) {
   
   try {
     await connectDB()
-    const user = getAuthUser();
+    const user = await  getAuthUser();
     console.log("THIS IS USER iN PRODUCT TSETING",user);
     if(!requireSeller(user)){
       return NextResponse.json({success:false,message:'unauthorized'},{status:401})

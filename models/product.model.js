@@ -5,7 +5,7 @@ const productSchema = new mongoose.Schema({
     type:mongoose.Schema.Types.ObjectId,
     ref:"Store"
   },
-  SellerId:{
+  sellerId:{
     type:mongoose.Schema.Types.ObjectId,
     ref:"User"
   },

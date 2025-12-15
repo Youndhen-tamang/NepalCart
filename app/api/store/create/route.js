@@ -17,6 +17,14 @@ export async function POST(request) {
       );
     }
 
+    if (!requireSeller(user)) {
+      console.log("Store creation failed: User is not a seller");
+      return NextResponse.json(
+        { success: false, message: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
     // JWT payload uses `id`; mongoose docs use `_id`
     const userId = user._id || user.id;
 
