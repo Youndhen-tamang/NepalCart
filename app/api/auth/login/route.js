@@ -39,11 +39,19 @@ export async function POST(request) {
       );
     }
 
+    // ---------------------------
+    // BUILD JWT PAYLOAD PROPERLY
+    // ---------------------------
     const payload = {
       id: user._id.toString(),
       role: user.role,
       email: user.email,
     };
+
+    // FIXED: storeId correct spelling
+    if (user.role === "seller" && user.storeId) {
+      payload.storeId = user.storeId.toString();
+    }
 
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken({ id: user._id.toString() });
@@ -51,13 +59,13 @@ export async function POST(request) {
     const userObj = user.toObject();
     delete userObj.password;
 
-    // IMPORTANT: Create response first
+    // Create response first
     const res = NextResponse.json({
       success: true,
       user: userObj,
     });
 
-    // Set cookies ON response
+    // Set cookies
     setTokenCookies(res, { accessToken, refreshToken });
 
     return res;
