@@ -16,7 +16,6 @@ export async function GET() {
       );
     }
 
-    // Check if user has a storeId
     const userDoc = await User.findById(user._id).populate("storeId");
     
     if (!userDoc || !userDoc.storeId) {
@@ -27,7 +26,6 @@ export async function GET() {
       });
     }
 
-    // Get store details
     const store = await Store.findById(userDoc.storeId);
 
     return NextResponse.json({
