@@ -1,3 +1,5 @@
+
+
 const apiGet = async (path) => {
   try {
     const res = await fetch(path, {
@@ -44,3 +46,4 @@ export const removeWishlistItem = (id) =>
 export const fetchSupportTickets = () => apiGet("/api/customer/support");
 export const createSupportTicket = (payload) =>
   apiSend("/api/customer/support", "POST", payload);
+

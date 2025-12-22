@@ -62,7 +62,10 @@ variants: [
 soldCount: { type: Number, default: 0 },
 
 isFeatured: { type: Boolean, default: false },
-
+isActive:{
+  type:Boolean,
+  default:true
+},
 seoTitle: String,
 seoDescription: String,
 },
