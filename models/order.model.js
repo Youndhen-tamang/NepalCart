@@ -2,17 +2,39 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    storeId:{type:mongoose.Schema.Types.ObjectId,ref:"Store"},
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     orderItems: [
       {
-        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-        price: Number,
-        qty: Number,
-      }
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        storeId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Store",
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+        },
+        qty: {
+          type: Number,
+          required: true,
+        },
+      },
     ],
 
-    totalAmount: Number,
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
 
     paymentStatus: {
       type: String,
@@ -22,33 +44,48 @@ const orderSchema = new mongoose.Schema(
 
     orderStatus: {
       type: String,
-      enum: ["pending", "confirmed", "packed", "shipped", "delivered"],
+      enum: [
+        "pending",
+        "confirmed",
+        "packed",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
       default: "pending",
     },
 
     paymentMethod: {
       type: String,
-      enum: ["COD", "Khalti", "Stripe", "eSewa"],
+      enum: ["COD", "Khalti", "eSewa"],
       default: "COD",
     },
 
     shippingAddress: {
-      fullName: String,
-      phone: String,
-      street: String,
-      city: String,
+      fullName: { type: String, required: true },
+      phone: { type: String, required: true },
+      street: { type: String, required: true },
+      city: { type: String, required: true },
       district: String,
       zip: String,
       country: { type: String, default: "Nepal" },
     },
 
-    trackingId: String,
+    shippingCost: { type: Number, default: 0 },
     discountCode: String,
-    shippingCost: Number,
+
+    trackingId: {
+      type: String,
+      default: () =>
+        `NC-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    },
+
     invoicePdfUrl: String,
   },
   { timestamps: true }
 );
 
-const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
-export default Order; 
+const Order =
+  mongoose.models.Order || mongoose.model("Order", orderSchema);
+
+export default Order;
