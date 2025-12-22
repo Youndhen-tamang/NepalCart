@@ -50,6 +50,7 @@ export async function PATCH(request,context) {
       "slug",
       "stock",
       "status",
+      "isActive",
     ]
     const updates={};
 

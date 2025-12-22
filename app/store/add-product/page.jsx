@@ -56,6 +56,8 @@ export default function StoreAddProduct() {
     const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,
+      credentials: "include",
+
     });
 
     const data = await res.json();
@@ -105,6 +107,8 @@ export default function StoreAddProduct() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        credentials: "include",
+
       });
 
       const data = await res.json();
